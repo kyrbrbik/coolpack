@@ -18,7 +18,7 @@ A general-purpose build pack that automatically detects your application type, g
 | Next.js | Server (SSR) / Static |
 | Nuxt | Server (SSR) / Static |
 | Remix / React Router | Server (SSR) / Static |
-| Astro | Static / Server (SSR) |
+| Astro | Server (SSR) / Static |
 | SvelteKit | Server (SSR) / Static |
 | Solid Start | Server (SSR) / Static |
 | TanStack Start | Server (SSR) / Static |

@@ -32,6 +32,12 @@ A general-purpose build pack that automatically detects your application type, g
 
 ## Installation
 
+### Quick Install
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/coollabsio/coolpack/main/install.sh | bash
+```
+
 ### From Source
 
 ```bash
@@ -44,8 +50,8 @@ The binary will be created at `./coolpack`.
 
 ### Requirements
 
-- Go 1.21+ (for building)
 - Docker with BuildKit support (for building images)
+- Go 1.21+ (only for building from source)
 
 ## Quick Start
 
@@ -76,16 +82,30 @@ Analyze and display the build plan without generating any files.
 coolpack plan                    # Current directory
 coolpack plan ./my-app           # Specific path
 coolpack plan --json             # Output as JSON
+coolpack plan --out              # Save to coolpack.json
+coolpack plan --out custom.json  # Save to custom file
+coolpack plan --packages curl --packages wget  # Add custom packages
 ```
+
+**Flags:**
+| Flag | Description |
+|------|-------------|
+| `--json` | Output as JSON |
+| `-o, --out` | Write plan to file (default: `coolpack.json`) |
+| `--packages` | Additional APT packages to install |
 
 ### `coolpack prepare [path]`
 
 Generate a Dockerfile in the `.coolpack/` directory.
 
+If a `coolpack.json` file exists in the project root, it will be used instead of running detection.
+
 ```bash
 coolpack prepare
 coolpack prepare --static-server nginx     # Use nginx instead of Caddy
 coolpack prepare --build-cmd "npm run build:prod"
+coolpack prepare --plan coolpack.json      # Use specific plan file
+coolpack prepare --packages curl           # Add custom APT packages
 ```
 
 **Flags:**
@@ -99,16 +119,22 @@ coolpack prepare --build-cmd "npm run build:prod"
 | `--spa` | Enable SPA mode (serves index.html for all routes) |
 | `--no-spa` | Disable SPA mode (overrides auto-detection) |
 | `--build-env` | Build-time env vars (KEY=value or KEY) |
+| `--packages` | Additional APT packages to install |
+| `--plan` | Use plan file instead of detection |
 
 ### `coolpack build [path]`
 
 Generate Dockerfile and build the container image.
+
+If a `coolpack.json` file exists in the project root, it will be used instead of running detection.
 
 ```bash
 coolpack build
 coolpack build -n my-app -t v1.0.0
 coolpack build --build-env NEXT_PUBLIC_API_URL=https://api.example.com
 coolpack build --no-cache
+coolpack build --plan coolpack.json        # Use specific plan file
+coolpack build --packages ffmpeg           # Add custom APT packages
 ```
 
 **Flags:**
@@ -125,6 +151,8 @@ coolpack build --no-cache
 | `--spa` | Enable SPA mode (serves index.html for all routes) |
 | `--no-spa` | Disable SPA mode (overrides auto-detection) |
 | `--build-env` | Build-time env vars |
+| `--packages` | Additional APT packages to install |
+| `--plan` | Use plan file instead of detection |
 
 ### `coolpack run [path]`
 
@@ -167,6 +195,7 @@ Override Coolpack behavior with environment variables:
 | `COOLPACK_SPA_OUTPUT_DIR` | Override static output directory | Framework-specific |
 | `COOLPACK_SPA` | Enable SPA mode | Auto-detected |
 | `COOLPACK_NO_SPA` | Disable SPA mode | `false` |
+| `COOLPACK_PACKAGES` | Additional APT packages (comma-separated) | - |
 | `NODE_VERSION` | Alternative to `COOLPACK_NODE_VERSION` (legacy) | - |
 
 **Priority:** CLI flags > Environment variables > Auto-detected
@@ -285,6 +314,37 @@ coolpack build
 
 # Manual override
 coolpack build --spa
+```
+
+### Using Plan Files
+
+Save a build plan and reuse it for reproducible builds:
+
+```bash
+# Generate and save plan
+coolpack plan --out
+
+# Edit coolpack.json to customize settings...
+
+# Build using the plan file (auto-detected)
+coolpack build
+
+# Or specify explicitly
+coolpack build --plan coolpack.json
+```
+
+### Custom APT Packages
+
+Add system packages that aren't auto-detected:
+
+```bash
+# Via CLI flag
+coolpack build --packages ffmpeg --packages curl
+
+# Via environment variable
+COOLPACK_PACKAGES=ffmpeg,curl coolpack build
+
+# Via plan file (add to metadata.custom_packages)
 ```
 
 ---

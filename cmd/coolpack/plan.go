@@ -17,6 +17,7 @@ var (
 	planPath       string
 	planOutFile    string
 	planPackages   []string
+	planBuildEnvs  []string
 )
 
 var planCmd = &cobra.Command{
@@ -38,6 +39,7 @@ func init() {
 	planCmd.Flags().StringVarP(&planOutFile, "out", "o", "", "Write plan to file (default: coolpack.json if flag used without value)")
 	planCmd.Flags().Lookup("out").NoOptDefVal = "coolpack.json"
 	planCmd.Flags().StringArrayVar(&planPackages, "packages", nil, "Additional APT packages to install (e.g., curl, wget)")
+	planCmd.Flags().StringArrayVar(&planBuildEnvs, "build-env", nil, "Build-time environment variables (KEY=value or KEY to use current env)")
 }
 
 func runPlan(cmd *cobra.Command, args []string) error {
@@ -76,6 +78,14 @@ func runPlan(cmd *cobra.Command, args []string) error {
 	// Apply custom packages (CLI > env > detected)
 	applyCustomPackages(plan, planPackages)
 
+	// Parse and apply build environment variables
+	if len(planBuildEnvs) > 0 {
+		envMap := planParseEnvVars(planBuildEnvs)
+		if len(envMap) > 0 {
+			plan.BuildEnv = envMap
+		}
+	}
+
 	// Write to file if --out is specified
 	if planOutFile != "" {
 		outPath := planOutFile
@@ -107,6 +117,26 @@ func runPlan(cmd *cobra.Command, args []string) error {
 	// Pretty print the plan
 	printPlan(plan)
 	return nil
+}
+
+// planParseEnvVars parses environment variable arguments
+// Supports KEY=value format or KEY (pulls from current environment)
+func planParseEnvVars(envArgs []string) map[string]string {
+	result := make(map[string]string)
+	for _, env := range envArgs {
+		if idx := strings.Index(env, "="); idx != -1 {
+			// KEY=value format
+			key := env[:idx]
+			value := env[idx+1:]
+			result[key] = value
+		} else {
+			// KEY only - pull from current environment
+			if value, exists := os.LookupEnv(env); exists {
+				result[env] = value
+			}
+		}
+	}
+	return result
 }
 
 // applyCustomPackages adds custom APT packages to the plan
@@ -184,6 +214,19 @@ func printPlan(plan *detector.Plan) {
 		fmt.Println("Detected Files:")
 		for _, f := range plan.DetectedFiles {
 			fmt.Printf("  - %s\n", f)
+		}
+	}
+	if len(plan.BuildEnv) > 0 {
+		fmt.Println()
+		fmt.Println("Build Environment:")
+		// Sort keys for consistent output
+		keys := make([]string, 0, len(plan.BuildEnv))
+		for k := range plan.BuildEnv {
+			keys = append(keys, k)
+		}
+		sort.Strings(keys)
+		for _, k := range keys {
+			fmt.Printf("  %s=%s\n", k, plan.BuildEnv[k])
 		}
 	}
 	if len(plan.Metadata) > 0 {

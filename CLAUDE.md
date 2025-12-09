@@ -16,6 +16,7 @@ A general purpose build pack for applications. Detects application type, generat
   - `--json` - Output as JSON
   - `-o, --out` - Write plan to file (e.g., `coolpack.json`)
   - `--packages` - Additional APT packages to install (e.g., `curl`, `wget`)
+  - `--build-env` - Build-time environment variables (KEY=value or KEY to pull from current env)
 - `coolpack prepare [path]` - Generate Dockerfile in `.coolpack/` directory
   - `-i, --install-cmd` - Override install command
   - `-b, --build-cmd` - Override build command

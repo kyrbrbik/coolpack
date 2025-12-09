@@ -85,6 +85,7 @@ coolpack plan --json             # Output as JSON
 coolpack plan --out              # Save to coolpack.json
 coolpack plan --out custom.json  # Save to custom file
 coolpack plan --packages curl --packages wget  # Add custom packages
+coolpack plan --build-env NEXT_PUBLIC_API_URL=https://api.example.com  # Add build env
 ```
 
 **Flags:**
@@ -93,6 +94,7 @@ coolpack plan --packages curl --packages wget  # Add custom packages
 | `--json` | Output as JSON |
 | `-o, --out` | Write plan to file (default: `coolpack.json`) |
 | `--packages` | Additional APT packages to install |
+| `--build-env` | Build-time env vars (KEY=value or KEY) |
 
 ### `coolpack prepare [path]`
 
